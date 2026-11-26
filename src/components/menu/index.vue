@@ -1,0 +1,185 @@
+<script lang="tsx">
+  import { defineComponent, ref, h, compile, computed } from 'vue';
+  import type { PropType } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { useRoute, useRouter, RouteRecordRaw } from 'vue-router';
+  import type { RouteMeta } from 'vue-router';
+  import { useAppStore } from '@/store';
+  import { listenerRouteChange } from '@/utils/route-listener';
+  import { openWindow, regexUrl } from '@/utils';
+  import useMenuTree from './use-menu-tree';
+
+  export default defineComponent({
+    props: {
+      /**
+       * 外部传入的菜单树：混合菜单下由 default-layout 传入「当前应用的菜单」；
+       * 不传则渲染全量菜单树（左侧单栏模式，行为与改造前一致）。
+       */
+      routes: {
+        type: Array as PropType<RouteRecordRaw[]>,
+        default: undefined,
+      },
+    },
+    emit: ['collapse'],
+    setup(props) {
+      const { t } = useI18n();
+      const appStore = useAppStore();
+      const router = useRouter();
+      const route = useRoute();
+      const { menuTree } = useMenuTree();
+      // 数据源：外部传入优先（混合菜单的左侧应用菜单），否则全量菜单树
+      const tree = computed<RouteRecordRaw[]>(
+        () =>
+          (props.routes as RouteRecordRaw[]) ||
+          (menuTree.value as RouteRecordRaw[])
+      );
+      const collapsed = computed({
+        get() {
+          if (appStore.device === 'desktop') return appStore.menuCollapse;
+          return false;
+        },
+        set(value: boolean) {
+          appStore.updateSettings({ menuCollapse: value });
+        },
+      });
+
+      // 仅「纯顶部」模式使用横向菜单；混合/侧栏模式一律纵向
+      const isTopMenu = computed(() => appStore.menuMode === 'top');
+      const openKeys = ref<string[]>([]);
+      const selectedKey = ref<string[]>([]);
+
+      const goto = (item: RouteRecordRaw) => {
+        // Open external link
+        if (regexUrl.test(item.path)) {
+          openWindow(item.path);
+          selectedKey.value = [item.name as string];
+          return;
+        }
+        // Eliminate external link side effects
+        const { hideInMenu, activeMenu } = item.meta as RouteMeta;
+        if (route.name === item.name && !hideInMenu && !activeMenu) {
+          selectedKey.value = [item.name as string];
+          return;
+        }
+        // Trigger router change
+        router.push({
+          name: item.name,
+        });
+      };
+      const findMenuOpenKeys = (target: string) => {
+        const result: string[] = [];
+        let isFind = false;
+        const backtrack = (item: RouteRecordRaw, keys: string[]) => {
+          if (item.name === target) {
+            isFind = true;
+            result.push(...keys);
+            return;
+          }
+          if (item.children?.length) {
+            item.children.forEach((el) => {
+              backtrack(el, [...keys, el.name as string]);
+            });
+          }
+        };
+        tree.value.forEach((el: RouteRecordRaw) => {
+          if (isFind) return; // Performance optimization
+          backtrack(el, [el.name as string]);
+        });
+        return result;
+      };
+
+      // 手风琴：菜单展开状态变化时只保留最后展开的那一项（顶级菜单每次只开一个）
+      const onOpenKeysChange = (keys: string[]) => {
+        openKeys.value = keys.length ? [keys[keys.length - 1]] : [];
+      };
+
+      listenerRouteChange((newRoute) => {
+        const { requiresAuth, activeMenu, hideInMenu } = newRoute.meta;
+        if (requiresAuth && (!hideInMenu || activeMenu)) {
+          const menuOpenKeys = findMenuOpenKeys(
+            (activeMenu || newRoute.name) as string
+          );
+
+          // 地址直达/路由切换：展开当前路由所在的完整父级链（支持多级菜单）
+          openKeys.value = menuOpenKeys.slice(0, -1);
+
+          selectedKey.value = [
+            activeMenu || menuOpenKeys[menuOpenKeys.length - 1],
+          ];
+        }
+      }, true);
+      const setCollapse = (val: boolean) => {
+        if (appStore.device === 'desktop')
+          appStore.updateSettings({ menuCollapse: val });
+      };
+
+      const renderSubMenu = () => {
+        function travel(_route: RouteRecordRaw[], nodes = []) {
+          if (_route) {
+            _route.forEach((element) => {
+              // This is demo, modify nodes as needed
+              const icon = element?.meta?.icon
+                ? () => h(compile(`<${element?.meta?.icon}/>`))
+                : null;
+              const node =
+                element?.children && element?.children.length !== 0 ? (
+                  <a-sub-menu
+                    key={element?.name}
+                    v-slots={{
+                      icon,
+                      title: () => h(compile(t(element?.meta?.locale || ''))),
+                    }}
+                  >
+                    {travel(element?.children)}
+                  </a-sub-menu>
+                ) : (
+                  <a-menu-item
+                    key={element?.name}
+                    v-slots={{ icon }}
+                    onClick={() => goto(element)}
+                  >
+                    {t(element?.meta?.locale || '')}
+                  </a-menu-item>
+                );
+              nodes.push(node as never);
+            });
+          }
+          return nodes;
+        }
+        return travel(tree.value);
+      };
+
+      return () => (
+        <a-menu
+          mode={isTopMenu.value ? 'horizontal' : 'vertical'}
+          v-model:collapsed={collapsed.value}
+          open-keys={openKeys.value}
+          onUpdate:openKeys={onOpenKeysChange}
+          show-collapse-button={appStore.device !== 'mobile'}
+          auto-open={false}
+          selected-keys={selectedKey.value}
+          auto-open-selected={true}
+          level-indent={34}
+          style="height: 100%;width:100%;"
+          onCollapse={setCollapse}
+        >
+          {renderSubMenu()}
+        </a-menu>
+      );
+    },
+  });
+</script>
+
+<style lang="less" scoped>
+  :deep(.arco-menu-inner) {
+    .arco-menu-inline-header {
+      display: flex;
+      align-items: center;
+    }
+    .arco-icon {
+      &:not(.arco-icon-down) {
+        font-size: 18px;
+      }
+    }
+  }
+</style>

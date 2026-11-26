@@ -1,0 +1,312 @@
+* {
+  box-sizing: border-box;
+}
+
+/* ---------- 路由切换动画（设置抽屉「页面动画」分组控制） ----------
+ * page-layout.vue 的 <transition :name> 取 route-transition.ts：
+ *   enabled=false → 空串（无动画）
+ *   gradient / flash / slide / fade / fadeBottom / zoomFade → route-<type>
+ * 动画作用于路由组件根元素，故必须定义在全局样式（scoped 无法穿透子组件）。
+ */
+.route-gradient-enter-active,
+.route-gradient-leave-active {
+  transition: opacity 200ms ease;
+}
+.route-gradient-enter-from,
+.route-gradient-leave-to {
+  opacity: 0;
+}
+
+.route-flash-enter-active,
+.route-flash-leave-active {
+  transition: opacity 90ms linear;
+}
+.route-flash-enter-from,
+.route-flash-leave-to {
+  opacity: 0;
+}
+
+.route-slide-enter-active,
+.route-slide-leave-active {
+  transition: opacity 220ms ease, transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.route-slide-enter-from {
+  opacity: 0;
+  transform: translateX(28px);
+}
+.route-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-18px);
+}
+
+/* 消退（默认）：轻微下沉 + 淡出 */
+.route-fade-enter-active,
+.route-fade-leave-active {
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.route-fade-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.route-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* 底部消退：自下而上滑入 + 淡出 */
+.route-fadeBottom-enter-active,
+.route-fadeBottom-leave-active {
+  transition: opacity 240ms ease, transform 240ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.route-fadeBottom-enter-from {
+  opacity: 0;
+  transform: translateY(28px);
+}
+.route-fadeBottom-leave-to {
+  opacity: 0;
+  transform: translateY(-14px);
+}
+
+/* 缩放消退：缩放 + 淡出 */
+.route-zoomFade-enter-active,
+.route-zoomFade-leave-active {
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.route-zoomFade-enter-from {
+  opacity: 0;
+  transform: scale(0.96);
+}
+.route-zoomFade-leave-to {
+  opacity: 0;
+  transform: scale(1.03);
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  background-color: var(--color-bg-1);
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  // 整体页面禁止滚动：滚动收敛到各自内容容器（.layout-content 等）
+  overflow: hidden;
+}
+
+#app {
+  height: 100%;
+}
+
+.echarts-tooltip-diy {
+  background: linear-gradient(
+    304.17deg,
+    var(--color-bg-3) -6.04%,
+    var(--color-bg-2) 85.2%
+  ) !important;
+  border: none !important;
+  backdrop-filter: blur(10px) !important;
+  /* Note: backdrop-filter has minimal browser support */
+
+  border-radius: 6px !important;
+  .content-panel {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 9px;
+    background: var(--color-bg-2);
+    width: 164px;
+    height: 32px;
+    line-height: 32px;
+    box-shadow: 6px 0px 20px rgba(var(--primary-6), 0.12);
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
+  .tooltip-title {
+    margin: 0 0 10px 0;
+  }
+  p {
+    margin: 0;
+  }
+  .tooltip-title,
+  .tooltip-value {
+    font-size: 13px;
+    line-height: 15px;
+    display: flex;
+    align-items: center;
+    text-align: right;
+    color: var(--color-text-1);
+    font-weight: bold;
+  }
+  .tooltip-item-icon {
+    display: inline-block;
+    margin-right: 8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+}
+
+.general-card {
+  border-radius: 4px;
+  border: none;
+  & > .arco-card-header {
+    height: auto;
+    padding: 20px;
+    border: none;
+  }
+  & > .arco-card-body {
+    padding: 0 20px 20px 20px;
+  }
+}
+
+.split-line {
+  border-color: rgb(var(--gray-2));
+}
+
+.arco-table-cell {
+  .circle {
+    display: inline-block;
+    margin-right: 4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: rgb(var(--blue-6));
+    &.pass {
+      background-color: rgb(var(--green-6));
+    }
+  }
+}
+
+// 主题一致性：卡片柔和分层 + 柔和阴影（无描边，暗色下避免泛白边框）
+// 卡片使用半透明毛玻璃，透出内容区渐变背景，使内容区与主题品牌色融为一体
+.general-card {
+  background: var(--color-bg-2);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--adt-t-card-shadow);
+  border: none;
+  border-radius: 8px;
+  transition: box-shadow 0.2s, background 0.2s;
+  &:hover {
+    box-shadow: var(--adt-t-card-shadow-hover);
+  }
+}
+
+// 暗色主题：降低不透明度，让内容区渐变透出来
+[arco-theme='dark'] .general-card {
+  background: rgba(var(--primary-6), 0.08);
+  border: none;
+}
+
+// 表格无边框化：去掉所有边线；表头背景加深（品牌半透明）、行 hover 品牌叠加
+.arco-table {
+  // 去外框与单元格/表头边框
+  border: none !important;
+  .arco-table-container,
+  .arco-table-scroll {
+    border: none !important;
+  }
+  .arco-table-td,
+  .arco-table-th {
+    border: none !important;
+  }
+  // 表头加深背景（亮色品牌浅叠 / 暗色白半透明），靠背景区分表头与内容
+  .arco-table-th {
+    background: rgba(var(--primary-6), 0.08) !important;
+  }
+  // 单元格保持透明
+  .arco-table-td {
+    background: transparent !important;
+  }
+  // 单元格统一单行省略：内容不撑列宽（列宽=声明宽），横向滚动条只在确实放不下时出现
+  .arco-table-th,
+  .arco-table-td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  // 行 hover 品牌叠加
+  .arco-table-tr:hover .arco-table-td {
+    background: rgba(var(--primary-6), 0.08) !important;
+  }
+  // 选中行略深
+  .arco-table-tr.arco-table-tr-selected .arco-table-td {
+    background: rgba(var(--primary-6), 0.12) !important;
+  }
+  // 固定列（左/右）必须不透明：单元格整体透明化后，横向滚动时下方内容会从固定列透出。
+  // 注意类名是 Arco 生成的 `arco-table-col-fixed-*`（td 与 th 都带），写前缀会静默失效。
+  .arco-table-td.arco-table-col-fixed-left,
+  .arco-table-td.arco-table-col-fixed-right {
+    background: var(--color-bg-2) !important;
+  }
+  // 表头固定列要跟表头同色（不能用卡片色，否则表头会缺一块）
+  .arco-table-th.arco-table-col-fixed-left,
+  .arco-table-th.arco-table-col-fixed-right {
+    background: rgba(var(--primary-6), 0.08) !important;
+  }
+  .arco-table-tr:hover .arco-table-td.arco-table-col-fixed-left,
+  .arco-table-tr:hover .arco-table-td.arco-table-col-fixed-right {
+    background: rgba(var(--primary-6), 0.08) !important;
+  }
+  .arco-table-tr.arco-table-tr-selected .arco-table-td.arco-table-col-fixed-left,
+  .arco-table-tr.arco-table-tr-selected .arco-table-td.arco-table-col-fixed-right {
+    background: rgba(var(--primary-6), 0.12) !important;
+  }
+}
+
+// 暗色主题表格透明化，透出内容区渐变（与上面同规则，暗色下 hover 略深）
+[arco-theme='dark'] .arco-table {
+  .arco-table-th,
+  .arco-table-th.arco-table-col-fixed-left,
+  .arco-table-th.arco-table-col-fixed-right {
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
+  .arco-table-tr:hover .arco-table-td {
+    background: rgba(var(--primary-6), 0.14) !important;
+  }
+  .arco-table-tr.arco-table-tr-selected .arco-table-td {
+    background: rgba(var(--primary-6), 0.18) !important;
+  }
+  .arco-table-tr:hover .arco-table-td.arco-table-col-fixed-left,
+  .arco-table-tr:hover .arco-table-td.arco-table-col-fixed-right {
+    background: rgba(var(--primary-6), 0.14) !important;
+  }
+  .arco-table-tr.arco-table-tr-selected .arco-table-td.arco-table-col-fixed-left,
+  .arco-table-tr.arco-table-tr-selected .arco-table-td.arco-table-col-fixed-right {
+    background: rgba(var(--primary-6), 0.18) !important;
+  }
+}
+
+// ---------- 全局滚动条：细、半透明、跟随主题文字色（参照 Reasonix scrollbar 范式） ----------
+* {
+  scrollbar-width: thin; // Firefox
+  scrollbar-color: color-mix(in srgb, var(--color-text-4) 40%, transparent) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  // 主题 fgFaint 低透明度：暗色下隐约可见、不泛白
+  background: color-mix(in srgb, var(--color-text-4) 40%, transparent);
+  background-clip: padding-box;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-text-3) 55%, transparent);
+  }
+
+  &:active {
+    background: color-mix(in srgb, var(--color-text-2) 65%, transparent);
+  }
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}

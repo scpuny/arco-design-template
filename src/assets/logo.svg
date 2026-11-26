@@ -1,0 +1,13 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>ADT logo</title>
+  <desc>以管理后台布局为原型的标识：侧栏、顶栏与内容模块，青色块代表可替换的业务区块。</desc>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="#165DFF"/>
+  <rect x="12" y="13" width="9" height="38" rx="2.5" fill="#FFFFFF"/>
+  <rect x="14.5" y="18" width="4" height="4" rx="1.3" fill="#14C9C9"/>
+  <rect x="14.5" y="26" width="4" height="4" rx="1.3" fill="#165DFF"/>
+  <rect x="14.5" y="34" width="4" height="4" rx="1.3" fill="#165DFF"/>
+  <rect x="25" y="13" width="27" height="8" rx="2.5" fill="#FFFFFF"/>
+  <rect x="25" y="25" width="27" height="11" rx="2.5" fill="#FFFFFF"/>
+  <rect x="25" y="40" width="12" height="11" rx="2.5" fill="#FFFFFF" opacity="0.88"/>
+  <rect x="40" y="40" width="12" height="11" rx="2.5" fill="#14C9C9"/>
+</svg>
